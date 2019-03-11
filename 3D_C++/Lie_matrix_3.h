@@ -48,6 +48,7 @@ public:
         // log rotation matrix
         float theta = acos((m_rotation.trace() - 1.) * 0.5);
         EMatrix log_r = (m_rotation - m_rotation.transpose()) * theta / sin(theta);
+        //std::cerr << "log_r: " << log_r << std::endl;
         m_log_tensor(0) = log_r(2, 1);
         m_log_tensor(1) = log_r(0, 2);
         m_log_tensor(2) = log_r(1, 0);
@@ -56,6 +57,7 @@ public:
         EMatrix mat_eye = EMatrix::Identity(3, 3); 
         EMatrix mat_v = mat_eye + (1 - cos(theta)) / pow(theta, 2) * log_r + (theta - sin(theta)) / pow(theta, 3) * log_r * log_r;
         EVector log_u = mat_v.inverse() * m_offset;
+        //std::cerr << "log_u: " << log_u << std::endl;
         m_log_tensor(3) = log_u(0);
         m_log_tensor(4) = log_u(1);
         m_log_tensor(5) = log_u(2);
@@ -80,6 +82,28 @@ public:
     {
         return m_log_tensor;
     }
+
+    EMatrix& rotation_matrix()
+    {
+        return m_rotation;
+    }
+
+    EVector& offset_vector()
+    {
+        return m_offset;
+    }
+
+    float scale_parameter()
+    {
+        return m_scale;
+    }
+
+    EVector& log_tensor()
+    {
+        return m_log_tensor;
+    }
+
+
 
 };
 

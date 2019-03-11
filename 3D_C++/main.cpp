@@ -14,10 +14,15 @@
 #include <CGAL/Point_set_3/IO.h>
 #include <CGAL/Real_timer.h>
 
+#include <Eigen/Core>
+#include <Eigen/Dense>
+
 #include "Symmetry_orbit_detect_3.h"
 
 typedef CGAL::Simple_cartesian<double>  Kernel;
 typedef Kernel::Point_3                 Point;
+typedef Eigen::Matrix<Kernel::FT, Eigen::Dynamic, Eigen::Dynamic>   EMatrix;
+typedef Eigen::Matrix<Kernel::FT, Eigen::Dynamic, 1>                        EVector;
 
 void usage(){
     std::cout << "Usage: ./main file.ply" << std::endl;
@@ -33,8 +38,10 @@ int main(int argc, char** argv){
     }
 
     std::string filename(argv[1]);
-    Symmetry_orbit_detect_3<Kernel> my_points(filename, 0.1, 2, 2);
-    my_points.pairing_points(0.1, 0.2);
+    Symmetry_orbit_detect_3<Kernel> my_points(filename, 0.18, 2, 2);
+    my_points.pairing_points(0.18, 0.05);
+    //my_points.ransac(2, 0.5);
+    EVector mean_vector = my_points.mean_shift(100.);
 
 
     return EXIT_SUCCESS;
