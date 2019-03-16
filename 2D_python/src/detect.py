@@ -3,6 +3,7 @@
 # Author: Tong ZHAO
 
 import numpy as np
+from sklearn.metrics import pairwise_distances
 
 
 def distance_pts(log_mats, log_mat_ref, alpha, beta, gamma):
@@ -23,7 +24,10 @@ def distance_pts(log_mats, log_mat_ref, alpha, beta, gamma):
     
     weights = np.array([beta, beta, alpha, gamma])
 
-    return np.power(log_mats - log_mat_ref, 2).dot(weights)
+    dist_sub = np.power(log_mats - log_mat_ref, 2).dot(weights)
+    dist_sum = np.power(log_mats + log_mat_ref, 2).dot(weights)
+
+    return np.minimum(dist_sub, dist_sum)
 
 
 def distance_space(log_mats, generator, alpha, beta, gamma):
@@ -103,7 +107,7 @@ def ransac(points, k, alpha, beta, gamma, thresh, num_draws = 100):
     return best_generator, best_score
 
 
-def sigma_estimation(points, alpha, beta, gamma, num_pairs = 1000):
+def sigma_estimation(points, alpha, beta, gamma, num_pairs = 10000):
     """Estimate gamma function for mean-shift by monte-carlo
 
     Params:
@@ -177,3 +181,56 @@ def mean_neighbors(points, center, thresh, alpha, beta, gamma):
     distances = distance_pts(points, center, alpha, beta, gamma)
     
     return distances < thresh
+
+
+def region_growing_neighbors(neighbors_1, neighbors_2, T):
+    """Transform the neighbors of point 1 to point 2
+
+    Params:
+        point_1 (np.array): the coordinate of the first point
+        point_2 (np.array): the coordinate of the second point
+        pts     (np.array): the point cloud
+        tree    (KDTree)  : the kdtree to find neighbors
+        T       (np.array): the translation from point 1 to point 2
+        radius  (float)   : the radius to collect neighbors
+
+    Returns:
+        neighbors_1   (np.array): the neighbor points of point 1
+        neighbors_2   (np.array): the neighbor points of point 2
+        new_neighbors (np.array): the transformed neigbor points of point 1
+        distances     (float)   : the alignment error after transformation
+    """
+    
+    new_neighbors = neighbors_1.dot(T[:2, :2].T) * T[2, 2] + T[:2, -1]
+    distances = np.min(pairwise_distances(new_neighbors, neighbors_2), axis = 1)
+
+    return new_neighbors, distances.mean()
+
+
+def region_growing(points, points_left, points_right, pairs, T, threshold):
+
+    nb_1 = [points_left[pairs[0]], pairs[0], points_right[pairs[0]]]
+    nb_2 = [points_left[pairs[1]], pairs[1], points_right[pairs[1]]]
+
+    while True:
+        print(nb_1)
+        print(nb_2)
+        arr_1 = np.array([points[idx] for idx in nb_1])
+        arr_2 = np.array([points[idx] for idx in nb_2])
+        
+        distances = region_growing_neighbors(arr_1, arr_2, T)[1]
+        print(distances)
+        if distances < threshold:
+            nb_1 = [points_left[nb_1[0]]] + nb_1 + [points_right[nb_1[-1]]]
+            nb_2 = [points_left[nb_2[0]]] + nb_2 + [points_right[nb_2[-1]]]
+
+            if len(set(nb_1 + nb_2)) < len(nb_1) + len(nb_2):
+                break
+        else:
+            break
+
+    arr_1 = np.array([points[idx] for idx in nb_1])
+    arr_2 = np.array([points[idx] for idx in nb_2])
+
+    return arr_1, arr_2
+

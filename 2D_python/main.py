@@ -63,13 +63,13 @@ if __name__ == "__main__":
 
     # Select sub point cloud 
     print("Calculating transformations...")
-    selected_idx = np.random.choice(len(pts), opt.number, replace = False)
+    selected_idx = np.arange(0, len(pts), len(pts) // opt.number)
     my_subtree = KDTree(pts[selected_idx], 10)
     lT, dict_pairs = point_pairing(pts[selected_idx], normals[selected_idx], curvatures[selected_idx], my_subtree, opt.radius, opt.tpairing)
     print("%d pairs found!" % len(lT))
 
     # Clustering
-    lT_log = transform_embedding(lT)
+    lT_log = np.clip(transform_embedding(lT), -20, 20)
     print("Lie algebra embedding found!")
 
     # Plot Embedding space
@@ -86,13 +86,20 @@ if __name__ == "__main__":
         pairs = [dict_pairs[index] for index in np.where(select_transforms == 1)[0]]
         show_pair_points(pts[selected_idx], pairs, "RANSAC")
 
+    #print(lT_log)
     if True:
         # Mean shift - for symmetry
-        #sigma = sigma_estimation(lT_log, opt.alpha, opt.beta, opt.gamma) / 10.
-        sigma = 500.
+        sigma = sigma_estimation(lT_log, opt.alpha, opt.beta, opt.gamma) / 50.
+        #sigma = 50.
         print("Estimated sigma: ", sigma)
         center = mean_shift(lT_log, sigma, opt.alpha, opt.beta, opt.gamma)
-        select_transforms = mean_neighbors(lT_log, center, opt.tmean, opt.alpha, opt.beta, opt.gamma)
-        pairs = [dict_pairs[index] for index in np.where(select_transforms == 1)[0]]
-        print("Number of pairs: ", len(pairs))
-        show_pair_points(pts[selected_idx], pairs, "Mean-shift")
+        #select_transforms = mean_neighbors(lT_log, center, opt.tmean, opt.alpha, opt.beta, opt.gamma)
+        #pairs = [dict_pairs[index] for index in np.where(select_transforms == 1)[0]]
+        #print("Number of pairs: ", len(pairs))
+        #show_pair_points(pts[selected_idx], pairs, "Mean-shift")
+        all_distances = distance_pts(lT_log, center, opt.alpha, opt.beta, opt.gamma)
+        index = np.argmin(all_distances)
+        nb_1, nb_2 = region_growing(pts, pts_left, pts_right, dict_pairs[index], lT[index], 1.0)
+        print(nb_1)
+        print(nb_2)
+        show_symmetry(pts, nb_1, nb_2, "Symmetry")

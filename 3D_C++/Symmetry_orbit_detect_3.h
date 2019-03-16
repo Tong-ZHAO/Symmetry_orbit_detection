@@ -134,6 +134,8 @@ public:
     void pairing_points(float radius, float threshold)
     {
 
+        // pruning
+
         PointList my_nbs_i, my_nbs_j;
 
         for(size_t i = 0; i < my_pts.size() - 1; i++)
