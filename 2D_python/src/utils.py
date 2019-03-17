@@ -279,7 +279,8 @@ def show_symmetry(points, nb_1, nb_2, title, save_path = None):
     """ Show a point cloud in 2d
     Params:
         points    (np.array): the whole point set
-        pairs     (np.array): selected pairs of indices
+        nb_1
+        nb_2
         title     (str)     : title of the plot
         save_path (str)     : where to save the plot
     """
@@ -289,6 +290,32 @@ def show_symmetry(points, nb_1, nb_2, title, save_path = None):
     plt.scatter(points[:, 0], points[:, 1], c = 'b', s = 5, label = "point cloud")
     plt.scatter(nb_1[:, 0], nb_1[:, 1], c = 'r', s = 5, label = "symmetry_1")
     plt.scatter(nb_2[:, 0], nb_2[:, 1], c = 'g', s = 5, label = "symmetry_2")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.axis('equal')
+    plt.grid()
+    plt.legend()
+    plt.show()
+    
+    if type(save_path) != type(None):
+        fig.savefig(save_path)
+
+
+def show_orbits(points, nb_pairs, title, save_path = None):
+    """ Show a point cloud in 2d
+    Params:
+        points    (np.array): the whole point set
+        nb_pairs  (np.array): selected pairs of indices
+        title     (str)     : title of the plot
+        save_path (str)     : where to save the plot
+    """
+
+    fig = plt.figure(figsize = (6, 6))
+    plt.title(title)
+    plt.scatter(points[:, 0], points[:, 1], c = 'b', s = 5, label = "point cloud")
+    for i in range(len(nb_pairs)):
+        plt.scatter(nb_pairs[i][0][:, 0], nb_pairs[i][0][:, 1], s = 5, label = "%d_1" % i)
+        plt.scatter(nb_pairs[i][1][:, 0], nb_pairs[i][1][:, 1], s = 5, label = "%d_2" % i)
     plt.xlabel("x")
     plt.ylabel("y")
     plt.axis('equal')

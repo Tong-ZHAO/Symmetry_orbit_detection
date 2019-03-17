@@ -213,13 +213,13 @@ def region_growing(points, points_left, points_right, pairs, T, threshold):
     nb_2 = [points_left[pairs[1]], pairs[1], points_right[pairs[1]]]
 
     while True:
-        print(nb_1)
-        print(nb_2)
+        #print(nb_1)
+        #print(nb_2)
         arr_1 = np.array([points[idx] for idx in nb_1])
         arr_2 = np.array([points[idx] for idx in nb_2])
         
         distances = region_growing_neighbors(arr_1, arr_2, T)[1]
-        print(distances)
+        #print(distances)
         if distances < threshold:
             nb_1 = [points_left[nb_1[0]]] + nb_1 + [points_right[nb_1[-1]]]
             nb_2 = [points_left[nb_2[0]]] + nb_2 + [points_right[nb_2[-1]]]

@@ -28,7 +28,7 @@ if __name__ == "__main__":
     parser.add_argument('-g', '--gamma', type = float, default = 10., help = 'gamma - coeff for scaling factor')
     parser.add_argument('-r', '--radius', type = float, default = 0.02, help = 'the radius for normal estimation')
     parser.add_argument('-t', '--tpairing', type = float, default = 0.0005, help = 'the threshold for point pairing')
-    parser.add_argument('-s', '--transac', type = float, default = 0.01, help = 'the threshold for ransac')
+    parser.add_argument('-s', '--transac', type = float, default = 0.005, help = 'the threshold for ransac')
     parser.add_argument('-k', '--k', type = int, default = 2, help = 'the dimension of subspace in ransac')
     parser.add_argument('-e', '--tmean', type = float, default = 0.001, help = 'the threshold for mean-shift')
     parser.add_argument('-n', '--number', type = int, default = 250, help = 'the sub point number to do point pairing')
@@ -73,23 +73,30 @@ if __name__ == "__main__":
     print("Lie algebra embedding found!")
 
     # Plot Embedding space
-    #show_embedding(lT_log, [0, 1, 2], ["u1", "u2", "theta"])
-    #show_embedding(lT_log, [0, 1, 3], ["u1", "u2", "lambd"])
-    #show_embedding(lT_log, [0, 2, 3], ["u1", "theta", "lambd"])
-    #show_embedding(lT_log, [1, 2, 3], ["u2", "theta", "lambd"])
+    #show_embedding(lT_log, [0, 1, 2], ["x1", "x2", "theta"])
+    #show_embedding(lT_log, [0, 1, 3], ["x1", "x2", "lambd"])
+    #show_embedding(lT_log, [0, 2, 3], ["x1", "theta", "lambd"])
+    #show_embedding(lT_log, [1, 2, 3], ["x2", "theta", "lambd"])
 
-    if False:
+    print(pts)
+
+    if True:
     # Ransac - for orbits
         best_generators, best_score = ransac(lT_log, opt.k, opt.alpha, opt.beta, opt.gamma, opt.transac)
         print("Best score: ", best_score)
         select_transforms = in_plane(lT_log, best_generators.T, opt.alpha, opt.beta, opt.gamma, opt.transac)
-        pairs = [dict_pairs[index] for index in np.where(select_transforms == 1)[0]]
-        show_pair_points(pts[selected_idx], pairs, "RANSAC")
+        nb_pairs = []
+        #pairs = [dict_pairs[index] for index in np.where(select_transforms == 1)[0]]
+        for idx in np.where(select_transforms == 1)[0]:
+            pair = [selected_idx[dict_pairs[idx][0]], selected_idx[dict_pairs[idx][1]]]
+            nb_1, nb_2 = region_growing(pts, pts_left, pts_right, pair, lT[idx], 0.1) 
+            nb_pairs.append([nb_1, nb_2])
+        show_orbits(pts, nb_pairs[:3], "RANSAC")
 
     #print(lT_log)
-    if True:
+    if False:
         # Mean shift - for symmetry
-        sigma = sigma_estimation(lT_log, opt.alpha, opt.beta, opt.gamma) / 50.
+        sigma = sigma_estimation(lT_log, opt.alpha, opt.beta, opt.gamma) / 10.
         #sigma = 50.
         print("Estimated sigma: ", sigma)
         center = mean_shift(lT_log, sigma, opt.alpha, opt.beta, opt.gamma)
@@ -99,7 +106,8 @@ if __name__ == "__main__":
         #show_pair_points(pts[selected_idx], pairs, "Mean-shift")
         all_distances = distance_pts(lT_log, center, opt.alpha, opt.beta, opt.gamma)
         index = np.argmin(all_distances)
-        nb_1, nb_2 = region_growing(pts, pts_left, pts_right, dict_pairs[index], lT[index], 1.0)
+        pair = [selected_idx[dict_pairs[index][0]], selected_idx[dict_pairs[index][1]]] 
+        nb_1, nb_2 = region_growing(pts, pts_left, pts_right, pair, lT[index], 0.5)
         print(nb_1)
         print(nb_2)
         show_symmetry(pts, nb_1, nb_2, "Symmetry")
