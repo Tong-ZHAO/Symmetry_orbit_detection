@@ -9,6 +9,7 @@ The algorithm works on both 2D and 3D point clouds. The 2D version is implemente
 ### 2D Implementation
 
 * \>= Python 3
+* Numpy, Sklearn, matplotlib
 
 ### 3D Implementation
 
